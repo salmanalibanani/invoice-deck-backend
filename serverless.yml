@@ -1,0 +1,113 @@
+service: invoice-deck-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-southeast-2
+  stage: dev
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Query
+        - dynamodb:UpdateItem
+      Resource:
+        - { "Fn::GetAtt": [InvoicesTable, Arn] }
+        - { "Fn::GetAtt": [CustomersTable, Arn] }
+  environment:
+    INVOICES_TABLE: Invoices
+    CUSTOMERS_TABLE: Customers
+  httpApi:
+    authorizers:
+      cognitoAuthorizer:
+        type: jwt
+        identitySource: '$request.header.Authorization'
+        issuerUrl: https://cognito-idp.ap-southeast-2.amazonaws.com/YOUR_USER_POOL_ID # replace YOUR_USER_POOL_ID with your Cognito User Pool ID
+        audience:
+          - YOUR_USER_POOL_CLIENT_ID # replace with your User Pool app client ID
+
+functions:
+  healthPing:
+    handler: dist/handlers/health/ping.handler
+    events:
+      - httpApi:
+          path: /ping
+          method: get
+          authorizer: none
+
+  createInvoice:
+    handler: dist/handlers/invoices/createInvoice.handler
+    events:
+      - httpApi:
+          path: /invoices
+          method: post
+          authorizer: cognitoAuthorizer
+
+  listInvoices:
+    handler: dist/handlers/invoices/listInvoices.handler
+    events:
+      - httpApi:
+          path: /invoices
+          method: get
+          authorizer: cognitoAuthorizer
+
+  getInvoice:
+    handler: dist/handlers/invoices/getInvoice.handler
+    events:
+      - httpApi:
+          path: /invoices/{invoiceId}
+          method: get
+          authorizer: cognitoAuthorizer
+
+  createCustomer:
+    handler: dist/handlers/customers/createCustomer.handler
+    events:
+      - httpApi:
+          path: /customers
+          method: post
+          authorizer: cognitoAuthorizer
+
+  listCustomers:
+    handler: dist/handlers/customers/listCustomers.handler
+    events:
+      - httpApi:
+          path: /customers
+          method: get
+          authorizer: cognitoAuthorizer
+
+resources:
+  Resources:
+    InvoicesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Invoices
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: invoiceId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: invoiceId
+            KeyType: RANGE
+
+    CustomersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Customers
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: customerId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: customerId
+            KeyType: RANGE

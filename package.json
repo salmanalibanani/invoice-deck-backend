@@ -1,0 +1,25 @@
+{
+  "name": "invoice-deck-backend",
+  "version": "0.1.0",
+  "description": "Serverless backend for the Invoice Deck mobile invoicing app.",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "deploy": "serverless deploy",
+    "remove": "serverless remove"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.525.0",
+    "@aws-sdk/lib-dynamodb": "^3.525.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.122",
+    "@types/node": "^20.10.6",
+    "serverless": "^3.38.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
