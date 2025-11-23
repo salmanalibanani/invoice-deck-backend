@@ -1,22 +1,25 @@
 service: invoice-deck-backend
 
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   name: aws
   runtime: nodejs20.x
   region: ap-southeast-2
   stage: dev
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:PutItem
-        - dynamodb:GetItem
-        - dynamodb:Query
-        - dynamodb:UpdateItem
-      Resource:
-        - { "Fn::GetAtt": [InvoicesTable, Arn] }
-        - { "Fn::GetAtt": [CustomersTable, Arn] }
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - { "Fn::GetAtt": [InvoicesTable, Arn] }
+            - { "Fn::GetAtt": [CustomersTable, Arn] }
   environment:
     INVOICES_TABLE: Invoices
     CUSTOMERS_TABLE: Customers
@@ -24,10 +27,10 @@ provider:
     authorizers:
       cognitoAuthorizer:
         type: jwt
-        identitySource: '$request.header.Authorization'
-        issuerUrl: https://cognito-idp.ap-southeast-2.amazonaws.com/YOUR_USER_POOL_ID # replace YOUR_USER_POOL_ID with your Cognito User Pool ID
+        identitySource: "$request.header.Authorization"
+        issuerUrl: https://cognito-idp.ap-southeast-2.amazonaws.com/ap-southeast-2_i0AK01n5x
         audience:
-          - YOUR_USER_POOL_CLIENT_ID # replace with your User Pool app client ID
+          - 4t6abbmkg930rtdrambi10rqt0
 
 functions:
   healthPing:
@@ -36,7 +39,6 @@ functions:
       - httpApi:
           path: /ping
           method: get
-          authorizer: none
 
   createInvoice:
     handler: dist/handlers/invoices/createInvoice.handler
